@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Diagnostic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        form {
+            display: inline-block;
+            margin-top: 20px;
+        }
+        input {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>AI Health Diagnostic</h1>
+
+    <form id="health-form">
+        <label for="symptoms">Enter Symptoms:</label>
+        <input type="text" id="symptoms" name="symptoms" placeholder="e.g. fever, cough">
+        <button type="submit">Diagnose</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById("health-form").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const symptoms = document.getElementById("symptoms").value.split(',').map(s => s.trim());
+
+            const response = await fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ symptoms })
+            });
+
+            const data = await response.json();
+            document.getElementById("result").innerText = "Predicted Disease: " + data.predicted_disease;
+        });
+    </script>
+
+</body>
+</html>

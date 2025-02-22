@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import joblib
 
 # Load dataset
@@ -16,7 +16,9 @@ diseases = df['disease']
 le = LabelEncoder()
 diseases_encoded = le.fit_transform(diseases)
 mlb = MultiLabelBinarizer()
-symptoms_encoded = mlb.fit_transform(symptoms.values)
+
+# Convert symptoms to string before encoding
+symptoms_encoded = mlb.fit_transform(symptoms.astype(str).values)
 
 # Split data
 X_train, X_test, y_train, y_test = train_test_split(symptoms_encoded, diseases_encoded, test_size=0.2, random_state=42)
@@ -37,15 +39,19 @@ joblib.dump(le, "label_encoder.pkl")
 joblib.dump(mlb, "symptom_encoder.pkl")
 
 # Flask API
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
+
+@app.route('/')
+def home():
+    return render_template('main.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json['symptoms']
-    symptoms_vector = mlb.transform([data])
+    symptoms_vector = mlb.transform([list(map(str, data))])  # Ensure input is in string format
     prediction = model.predict(symptoms_vector)
     predicted_disease = le.inverse_transform([np.argmax(prediction)])[0]
     return jsonify({"predicted_disease": predicted_disease})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
